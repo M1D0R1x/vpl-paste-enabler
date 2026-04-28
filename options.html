@@ -1,0 +1,480 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>VPL Paste Enabler — Settings</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #0a0e1a;
+      --bg2: #111827;
+      --bg3: #1a2236;
+      --bg4: #0f172a;
+      --border: rgba(255,255,255,0.07);
+      --border-focus: rgba(99,179,237,0.35);
+      --text: #e2e8f0;
+      --muted: #64748b;
+      --muted2: #94a3b8;
+      --accent: #3b82f6;
+      --accent2: #60a5fa;
+      --green: #22c55e;
+      --mono: 'JetBrains Mono', monospace;
+      --sans: 'Inter', system-ui, sans-serif;
+    }
+
+    html { background: var(--bg); }
+    body {
+      font-family: var(--sans);
+      font-size: 14px;
+      color: var(--text);
+      background: var(--bg);
+      min-height: 100vh;
+      padding: 0;
+    }
+
+    /* ── Layout ── */
+    .page-header {
+      background: linear-gradient(180deg, rgba(59,130,246,0.05) 0%, transparent 100%);
+      border-bottom: 1px solid var(--border);
+      padding: 28px 0 24px;
+      margin-bottom: 0;
+    }
+    .page-header-inner {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 0 28px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo {
+      width: 44px; height: 44px;
+      background: linear-gradient(135deg, #1d4ed8, #3b82f6);
+      border-radius: 11px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      box-shadow: 0 0 24px rgba(59,130,246,0.25);
+    }
+
+    .page-title { font-size: 18px; font-weight: 600; color: #fff; letter-spacing: -0.3px; }
+    .page-ver {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 3px;
+    }
+
+    .container {
+      max-width: 660px;
+      margin: 0 auto;
+      padding: 28px 28px 60px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .card-header {
+      padding: 14px 20px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-header-icon {
+      width: 28px; height: 28px;
+      border-radius: 7px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .card-header-icon.blue { background: rgba(59,130,246,0.15); color: var(--accent2); }
+    .card-header-icon.green { background: rgba(34,197,94,0.12); color: var(--green); }
+    .card-header-icon.purple { background: rgba(139,92,246,0.12); color: #a78bfa; }
+    .card-header-icon.orange { background: rgba(249,115,22,0.12); color: #fb923c; }
+
+    .card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+    .card-sub { font-size: 11px; color: var(--muted); margin-top: 1px; }
+
+    .card-body { padding: 0; }
+
+    /* ── Rows ── */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 20px;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .setting-row:last-child { border-bottom: 0; }
+    .setting-row:hover { background: rgba(255,255,255,0.02); }
+
+    .setting-info { flex: 1; }
+    .setting-label { font-size: 13px; color: var(--text); font-weight: 500; }
+    .setting-desc { font-size: 11px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
+
+    /* ── Toggle ── */
+    .toggle { position: relative; width: 40px; height: 22px; flex-shrink: 0; }
+    .toggle input { opacity: 0; width: 0; height: 0; position: absolute; }
+    .toggle-track {
+      position: absolute; inset: 0;
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      width: 16px; height: 16px;
+      left: 2px; top: 2px;
+      background: var(--muted);
+      border-radius: 50%;
+      transition: all 0.2s;
+    }
+    .toggle input:checked + .toggle-track { background: var(--accent); border-color: rgba(59,130,246,0.5); }
+    .toggle input:checked + .toggle-track::after { transform: translateX(18px); background: #fff; }
+
+    /* ── Shortcut grid ── */
+    .shortcut-table { padding: 0; }
+
+    .shortcut-header-row {
+      display: grid;
+      grid-template-columns: 130px 1fr 1fr 80px;
+      gap: 10px;
+      padding: 10px 20px 8px;
+      border-bottom: 1px solid var(--border);
+    }
+    .col-head {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.7px;
+      color: var(--muted);
+      font-weight: 600;
+    }
+
+    .shortcut-grid {
+      display: grid;
+      grid-template-columns: 130px 1fr 1fr 80px;
+      gap: 10px;
+      padding: 10px 20px;
+      align-items: center;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.1s;
+    }
+    .shortcut-grid:last-child { border-bottom: 0; }
+    .shortcut-grid:hover { background: rgba(255,255,255,0.015); }
+
+    .shortcut-label { font-size: 13px; color: var(--text); font-weight: 500; }
+
+    .shortcut-input {
+      background: var(--bg4);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 7px 10px;
+      border-radius: 7px;
+      font-family: var(--mono);
+      font-size: 11px;
+      width: 100%;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.15s;
+      caret-color: transparent;
+    }
+    .shortcut-input:focus {
+      border-color: var(--border-focus);
+      background: rgba(59,130,246,0.05);
+    }
+    .shortcut-input::placeholder { color: var(--muted); font-size: 10px; }
+
+    .reset-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 6px 10px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-family: var(--sans);
+      font-size: 11px;
+      font-weight: 500;
+      transition: all 0.15s;
+      white-space: nowrap;
+    }
+    .reset-btn:hover { color: var(--text); border-color: rgba(255,255,255,0.15); background: var(--bg3); }
+
+    /* ── Speed section ── */
+    .speed-body { padding: 16px 20px; }
+
+    .speed-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .speed-note { font-size: 11px; color: var(--muted); }
+    .speed-val-display {
+      font-family: var(--mono);
+      font-size: 13px;
+      color: var(--accent2);
+      font-weight: 600;
+    }
+
+    .range-wrap { position: relative; margin-bottom: 14px; }
+    input[type=range] {
+      width: 100%;
+      -webkit-appearance: none;
+      height: 4px;
+      border-radius: 999px;
+      background: var(--bg4);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px; height: 16px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid rgba(255,255,255,0.2);
+      box-shadow: 0 0 8px rgba(59,130,246,0.4);
+      cursor: pointer;
+      transition: box-shadow 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { box-shadow: 0 0 12px rgba(59,130,246,0.6); }
+
+    .range-labels {
+      display: flex;
+      justify-content: space-between;
+      font-family: var(--mono);
+      font-size: 9px;
+      color: var(--muted);
+      margin-top: 4px;
+    }
+
+    .presets { display: grid; grid-template-columns: repeat(4, 1fr); gap: 7px; margin-bottom: 14px; }
+    .preset {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 9px 4px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 10px;
+      text-align: center;
+      transition: all 0.15s;
+      line-height: 1.3;
+    }
+    .preset:hover { color: var(--text); border-color: rgba(255,255,255,0.12); }
+    .preset.active { background: rgba(59,130,246,0.15); border-color: rgba(59,130,246,0.35); color: var(--accent2); }
+    .preset .p-name { font-size: 9px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; }
+    .preset .p-ms { font-size: 11px; font-weight: 600; margin-top: 2px; }
+    .preset .p-hint { font-size: 8px; color: var(--muted); margin-top: 1px; }
+
+    /* ── About ── */
+    .about-body { padding: 16px 20px; }
+    .about-text { font-size: 12px; color: var(--muted2); line-height: 1.7; }
+    .about-text strong { color: var(--text); }
+    .about-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .about-tag {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 3px 9px;
+      border-radius: 5px;
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-header">
+  <div class="page-header-inner">
+    <div class="logo">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+        <rect x="5" y="3" width="14" height="18" rx="2" fill="rgba(255,255,255,0.9)"/>
+        <rect x="9" y="2" width="6" height="3" rx="1" fill="rgba(255,255,255,0.45)"/>
+        <path d="M13 8L9 14h3l-1 4 4-6h-3l1-4z" fill="#fbbf24"/>
+      </svg>
+    </div>
+    <div>
+      <div class="page-title">VPL Paste Enabler — Settings</div>
+      <div class="page-ver">v3.0 · Ace Editor bypass for Moodle VPL &amp; similar portals</div>
+    </div>
+  </div>
+</div>
+
+<div class="container">
+
+  <!-- General -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon green">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+      </div>
+      <div>
+        <div class="card-title">General</div>
+        <div class="card-sub">Master controls for the extension</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Enable extension</div>
+          <div class="setting-desc">Master switch — disabling pauses all paste bypass and auto-typer behavior</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="enabled" /><span class="toggle-track"></span></label>
+      </div>
+      <div class="setting-row">
+        <div class="setting-info">
+          <div class="setting-label">Show visual indicator</div>
+          <div class="setting-desc">Display the green dot in the bottom-right corner of every page</div>
+        </div>
+        <label class="toggle"><input type="checkbox" id="showIndicator" /><span class="toggle-track"></span></label>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shortcuts -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon blue">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="2" y="6" width="20" height="13" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+      </div>
+      <div>
+        <div class="card-title">Custom Shortcuts</div>
+        <div class="card-sub">Click any field, then press your desired key combination</div>
+      </div>
+    </div>
+    <div class="card-body shortcut-table">
+      <div class="shortcut-header-row">
+        <div></div>
+        <div class="col-head">Windows / Linux</div>
+        <div class="col-head">Mac</div>
+        <div></div>
+      </div>
+      <div class="shortcut-grid" data-action="paste">
+        <div class="shortcut-label">Paste</div>
+        <input class="shortcut-input" data-platform="win" readonly placeholder="Click to record" />
+        <input class="shortcut-input" data-platform="mac" readonly placeholder="Click to record" />
+        <button class="reset-btn">Reset</button>
+      </div>
+      <div class="shortcut-grid" data-action="copy">
+        <div class="shortcut-label">Copy</div>
+        <input class="shortcut-input" data-platform="win" readonly placeholder="Click to record" />
+        <input class="shortcut-input" data-platform="mac" readonly placeholder="Click to record" />
+        <button class="reset-btn">Reset</button>
+      </div>
+      <div class="shortcut-grid" data-action="autoTyper">
+        <div class="shortcut-label">Auto-Typer</div>
+        <input class="shortcut-input" data-platform="win" readonly placeholder="Click to record" />
+        <input class="shortcut-input" data-platform="mac" readonly placeholder="Click to record" />
+        <button class="reset-btn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Auto-Typer Speed -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon orange">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+      </div>
+      <div>
+        <div class="card-title">Auto-Typer</div>
+        <div class="card-sub">Lower ms/char = faster typing. Ultra (10ms) is the fastest.</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="speed-body">
+        <div class="speed-header">
+          <span class="speed-note">Delay between keystrokes</span>
+          <span class="speed-val-display"><span id="speedVal">75</span> ms/char</span>
+        </div>
+
+        <div class="range-wrap">
+          <input type="range" id="speed" min="5" max="300" step="5" value="75" />
+          <div class="range-labels">
+            <span>5ms (Ultra)</span>
+            <span>300ms (Slow)</span>
+          </div>
+        </div>
+
+        <div class="presets">
+          <button class="preset" data-speed="150">
+            <div class="p-name">Slow</div>
+            <div class="p-ms">150ms</div>
+            <div class="p-hint">human-like</div>
+          </button>
+          <button class="preset" data-speed="75">
+            <div class="p-name">Medium</div>
+            <div class="p-ms">75ms</div>
+            <div class="p-hint">balanced</div>
+          </button>
+          <button class="preset" data-speed="30">
+            <div class="p-name">Fast</div>
+            <div class="p-ms">30ms</div>
+            <div class="p-hint">quick</div>
+          </button>
+          <button class="preset" data-speed="10">
+            <div class="p-name">Ultra</div>
+            <div class="p-ms">10ms</div>
+            <div class="p-hint">fastest</div>
+          </button>
+        </div>
+
+        <div class="setting-row" style="padding: 12px 0 0; border: 0; border-top: 1px solid var(--border); margin-top: 4px;">
+          <div class="setting-info">
+            <div class="setting-label">Randomize speed</div>
+            <div class="setting-desc">Adds ±20% variation per keystroke for more natural, human-like typing</div>
+          </div>
+          <label class="toggle"><input type="checkbox" id="randomizeSpeed" /><span class="toggle-track"></span></label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- About -->
+  <div class="card">
+    <div class="card-header">
+      <div class="card-header-icon purple">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+      </div>
+      <div>
+        <div class="card-title">About</div>
+      </div>
+    </div>
+    <div class="card-body">
+      <div class="about-body">
+        <div class="about-text">
+          <strong>VPL Paste Enabler v3.0</strong><br/>
+          Bypasses copy-paste restrictions and auto-types clipboard content character by character into Ace Editor fields. Works on Moodle VPL, HackerRank, and other Ace Editor-based coding portals.
+        </div>
+        <div class="about-tags">
+          <span class="about-tag">Moodle VPL</span>
+          <span class="about-tag">Ace Editor</span>
+          <span class="about-tag">Paste Bypass</span>
+          <span class="about-tag">Auto-Typer</span>
+          <span class="about-tag">MV3</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script src="content.js"></script>
+</body>
+</html>

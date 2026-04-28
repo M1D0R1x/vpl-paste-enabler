@@ -1,0 +1,32 @@
+# ── IDE / Editor ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.iml
+*.xml
+
+# ── OS artifacts ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Node (if you ever add a build step) ───────────────────────────────────────
+node_modules/
+npm-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ── Build / dist outputs ──────────────────────────────────────────────────────
+dist/
+build/
+*.zip
+*.crx
+*.pem
+
+# ── Secrets / env ─────────────────────────────────────────────────────────────
+.env
+.env.*
+secrets.*
+
+# ── Logs ──────────────────────────────────────────────────────────────────────
+*.log
