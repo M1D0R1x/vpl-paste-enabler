@@ -11,8 +11,21 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Manifest-v3-blue?style=flat-square" />
   <img src="https://img.shields.io/badge/version-3.0-informational?style=flat-square" />
+  <img src="https://img.shields.io/github/v/release/M1D0R1x/vpl-paste-enabler?style=flat-square&label=latest" />
   <img src="https://img.shields.io/badge/license-MIT-green?style=flat-square" />
+  <img src="https://img.shields.io/badge/contributions-welcome-brightgreen?style=flat-square" />
 </p>
+
+---
+
+## ⬇️ Download
+
+**Don't want to clone?** Grab the latest zip from the [Releases page](https://github.com/M1D0R1x/vpl-paste-enabler/releases/latest), unzip it, and load it via Chrome's developer mode.
+
+> **Quick install:**
+> 1. Download `vpl-paste-enabler-vX.Y.zip` from [Releases](https://github.com/M1D0R1x/vpl-paste-enabler/releases/latest)
+> 2. Unzip it anywhere
+> 3. Go to `chrome://extensions` → Enable **Developer mode** → **Load unpacked** → select the unzipped folder
 
 ---
 
@@ -35,16 +48,19 @@
 
 ## 📦 Installation (Developer Mode)
 
-> The extension is not on the Chrome Web Store. Load it manually:
+> The extension is not on the Chrome Web Store. Load it manually.
 
-1. Clone or download this repository.
-   ```bash
-   git clone https://github.com/<your-username>/vpl-paste-enabler.git
-   ```
-2. Open Chrome and navigate to `chrome://extensions`.
-3. Enable **Developer mode** (toggle, top-right).
-4. Click **Load unpacked** and select the `vpl-paste-enabler` folder.
-5. Pin the extension from the Extensions toolbar for quick access.
+**From a release zip (easiest):**
+1. Go to [Releases](https://github.com/M1D0R1x/vpl-paste-enabler/releases/latest) and download `vpl-paste-enabler-vX.Y.zip`
+2. Unzip it
+3. Open Chrome → `chrome://extensions` → Enable **Developer mode**
+4. Click **Load unpacked** → select the unzipped folder
+
+**From source:**
+```bash
+git clone https://github.com/M1D0R1x/vpl-paste-enabler.git
+```
+Then follow steps 3–4 above, pointing to the cloned folder.
 
 ---
 
@@ -92,11 +108,14 @@ vpl-paste-enabler/
 ├── manifest.json     # MV3 manifest
 ├── popup.html        # Toolbar popup UI
 ├── options.html      # Full settings page
-└── icons/
-    ├── icon16.png
-    ├── icon32.png
-    ├── icon48.png
-    └── icon128.png
+├── icons/
+│   ├── icon16.png
+│   ├── icon32.png
+│   ├── icon48.png
+│   └── icon128.png
+└── .github/
+    └── workflows/
+        └── release.yml   # Auto-builds zip and publishes GitHub Release on tag push
 ```
 
 ---
@@ -135,11 +154,9 @@ vpl-paste-enabler/
 
 ## 🤝 Contributing
 
-Pull requests are welcome. For significant changes, please open an issue first to discuss the approach.
+Contributions are welcome and appreciated! Whether it's a bug report, a feature idea, or a pull request — all of it helps.
 
-1. Fork the repo and create a feature branch: `git checkout -b feat/my-feature`
-2. Commit your changes with a clear message.
-3. Open a pull request against `main`.
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before submitting a PR. For cutting a new release, see [RELEASING.md](RELEASING.md).
 
 ---
 
