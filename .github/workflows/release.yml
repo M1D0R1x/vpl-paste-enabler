@@ -1,0 +1,53 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    name: Build zip & publish release
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Read version from manifest.json
+        id: version
+        run: |
+          VERSION=$(python3 -c "import json; print(json.load(open('manifest.json'))['version'])")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "zip_name=vpl-paste-enabler-v${VERSION}.zip" >> "$GITHUB_OUTPUT"
+
+      - name: Build extension zip
+        run: |
+          zip -r "${{ steps.version.outputs.zip_name }}" \
+            content.js \
+            manifest.json \
+            popup.html \
+            options.html \
+            icons/
+
+      - name: Extract tag annotation
+        id: notes
+        run: |
+          NOTES=$(git tag -l --format='%(contents)' "${{ github.ref_name }}" 2>/dev/null || true)
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${{ github.ref_name }}"
+          fi
+          echo "$NOTES" > release_notes.txt
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          body_path: release_notes.txt
+          files: ${{ steps.version.outputs.zip_name }}
+          draft: false
+          prerelease: false
