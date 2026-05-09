@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "VPL Paste Enabler",
-  "version": "3.0",
+  "version": "3.1",
   "description": "Bypass copy-paste blocks and auto-type clipboard text in Ace Editor based VPL portals",
   "permissions": ["clipboardRead", "clipboardWrite", "storage", "tabs"],
   "host_permissions": ["<all_urls>"],

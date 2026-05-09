@@ -8,7 +8,7 @@
       typingSpeed: 75,
       randomizeSpeed: false,
       customShortcut: null,
-      autoTyperShortcut: { key: 't', ctrl: true, shift: true, alt: false, meta: false }
+      autoTyperShortcut: { key: 'y', ctrl: true, shift: true, alt: false, meta: false }
     };
 
     const PRESETS = [150, 75, 30, 10];
@@ -82,8 +82,6 @@
 
         if (!pollTimer) pollTimer = window.setInterval(refresh, 150);
       } else {
-        // Grace period: ignore "not typing" responses within 800ms of clicking Start
-        // (content script may not have set isTyping=true yet)
         if (Date.now() - typingStartedAt < 800) return;
         $('mode-text').textContent = 'Paste Bypass';
         if ($('progress')) $('progress').classList.remove('show');
@@ -109,6 +107,9 @@
           if (PRESETS.indexOf(Number(speed)) === -1 && $('custom-speed')) {
             $('custom-speed').value = String(speed);
           }
+          if ($('randomize-speed-popup')) {
+            $('randomize-speed-popup').checked = !!(data && data.randomizeSpeed);
+          }
         });
       } catch (_) { renderSpeed(DEFAULTS.typingSpeed); }
     }
@@ -118,7 +119,6 @@
       if (HAS_STORAGE) {
         try { chrome.storage.sync.set({ typingSpeed: safeMs }); } catch (_) {}
       }
-      // Also notify the content script immediately so it takes effect without page reload
       sendMessage({ action: 'setSpeed', speed: safeMs }, null);
       renderSpeed(safeMs);
     }
@@ -151,7 +151,6 @@
       $('start-btn').addEventListener('click', function () {
         readClipboardText(function (text) {
           if (!text || !text.trim()) {
-            // Nothing in clipboard — show inline error
             if ($('mode-text')) $('mode-text').textContent = '⚠ Clipboard is empty';
             window.setTimeout(function () {
               if ($('mode-text')) $('mode-text').textContent = 'Paste Bypass';
@@ -159,7 +158,6 @@
             return;
           }
 
-          // Immediately flip UI into typing state before the content script responds
           if ($('mode-text')) $('mode-text').innerHTML = 'Auto-Typing<span class="typing-dots"></span>';
           if ($('progress')) $('progress').classList.add('show');
           if ($('progress-label')) { $('progress-label').classList.add('show'); $('progress-label').textContent = 'Starting…'; }
@@ -168,12 +166,10 @@
           if ($('cancel-btn')) $('cancel-btn').classList.add('show');
           if ($('status-card')) $('status-card').classList.add('typing-active');
 
-          // Start polling BEFORE sending so first response is captured
           typingStartedAt = Date.now();
           if (!pollTimer) pollTimer = window.setInterval(refresh, 150);
 
           sendMessage({ action: 'startAutoTyper', text: text }, function (resp) {
-            // If content script says it failed (e.g. no active tab), reset UI
             if (resp && resp.ok === false) {
               if ($('mode-text')) $('mode-text').textContent = 'Paste Bypass';
               if ($('progress')) $('progress').classList.remove('show');
@@ -192,6 +188,16 @@
         sendMessage({ action: 'cancelAutoTyper' }, function () {
           window.setTimeout(refresh, 150);
         });
+      });
+    }
+
+    if ($('randomize-speed-popup')) {
+      $('randomize-speed-popup').addEventListener('change', function () {
+        const val = !!$('randomize-speed-popup').checked;
+        if (HAS_STORAGE) {
+          try { chrome.storage.sync.set({ randomizeSpeed: val }); } catch (_) {}
+        }
+        sendMessage({ action: 'setRandomize', randomize: val }, null);
       });
     }
 
@@ -226,8 +232,8 @@
         mac: { key: 'c', ctrl: false, shift: false, alt: false, meta: true }
       },
       autoTyper: {
-        win: { key: 't', ctrl: true, shift: true, alt: false, meta: false },
-        mac: { key: 't', ctrl: false, shift: true, alt: false, meta: true }
+        win: { key: 'y', ctrl: true, shift: true, alt: false, meta: false },
+        mac: { key: 'y', ctrl: false, shift: true, alt: false, meta: true }
       }
     };
 
@@ -403,8 +409,8 @@
       mac: { key: 'c', ctrl: false, shift: false, alt: false, meta: true }
     },
     autoTyper: {
-      win: { key: 't', ctrl: true, shift: true, alt: false, meta: false },
-      mac: { key: 't', ctrl: false, shift: true, alt: false, meta: true }
+      win: { key: 'y', ctrl: true, shift: true, alt: false, meta: false },
+      mac: { key: 'y', ctrl: false, shift: true, alt: false, meta: true }
     }
   };
 
@@ -414,7 +420,7 @@
     typingSpeed: 75,
     randomizeSpeed: false,
     customShortcut: null,
-    autoTyperShortcut: DEFAULT_SHORTCUTS.autoTyper.win,
+    autoTyperShortcut: { key: 'y', ctrl: true, shift: true, alt: false, meta: false },
     shortcuts: DEFAULT_SHORTCUTS
   };
 
@@ -525,7 +531,9 @@
         '#vpl-paste-indicator.typing .vpl-dot{background:#f97316;box-shadow:0 0 0 3px rgba(249,115,22,0.25);animation:vplPulse 0.9s ease-in-out infinite;}' +
         '#vpl-paste-indicator .vpl-label{background:rgba(15,23,42,0.9);backdrop-filter:blur(8px);padding:4px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.08);display:none;letter-spacing:0.3px;}' +
         '#vpl-paste-indicator.typing .vpl-label,#vpl-paste-indicator.done .vpl-label{display:inline-block;}' +
-        '#vpl-paste-indicator.done .vpl-dot{background:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.25);}';
+        '#vpl-paste-indicator.done .vpl-dot{background:#3b82f6;box-shadow:0 0 0 3px rgba(59,130,246,0.25);}' +
+        '#vpl-paste-indicator.copied .vpl-dot{background:#a855f7;box-shadow:0 0 0 3px rgba(168,85,247,0.25);}' +
+        '#vpl-paste-indicator.copied .vpl-label{display:inline-block;}';
     (document.head || document.documentElement).appendChild(style);
   }
 
@@ -555,7 +563,7 @@
   function setIndicatorTyping(current, total) {
     const indicator = document.getElementById('vpl-paste-indicator');
     if (!indicator) return;
-    indicator.classList.remove('done');
+    indicator.classList.remove('done', 'copied');
     indicator.classList.add('typing');
     const label = indicator.querySelector('.vpl-label');
     if (label) label.textContent = current + '/' + total + ' chars';
@@ -564,7 +572,7 @@
   function setIndicatorDone() {
     const indicator = document.getElementById('vpl-paste-indicator');
     if (!indicator) return;
-    indicator.classList.remove('typing');
+    indicator.classList.remove('typing', 'copied');
     indicator.classList.add('done');
     const label = indicator.querySelector('.vpl-label');
     if (label) label.textContent = '✓ Done';
@@ -577,10 +585,27 @@
     }, 2000);
   }
 
-  function setIndicatorIdle() {
+  // NEW: flash purple "Copied!" when user copies from editor
+  function setIndicatorCopied(charCount) {
     const indicator = document.getElementById('vpl-paste-indicator');
     if (!indicator) return;
     indicator.classList.remove('typing', 'done');
+    indicator.classList.add('copied');
+    const label = indicator.querySelector('.vpl-label');
+    if (label) label.textContent = '✓ Copied' + (charCount ? ' (' + charCount + ')' : '');
+    window.setTimeout(function () {
+      const current = document.getElementById('vpl-paste-indicator');
+      if (!current) return;
+      current.classList.remove('copied');
+      const currentLabel = current.querySelector('.vpl-label');
+      if (currentLabel) currentLabel.textContent = '';
+    }, 1800);
+  }
+
+  function setIndicatorIdle() {
+    const indicator = document.getElementById('vpl-paste-indicator');
+    if (!indicator) return;
+    indicator.classList.remove('typing', 'done', 'copied');
     const label = indicator.querySelector('.vpl-label');
     if (label) label.textContent = '';
   }
@@ -608,9 +633,55 @@
   }
 
   function getSelectedText() {
+    // Try Ace editor first — most reliable for editor content
     const editor = findAceEditorInstance();
-    if (editor) { try { return editor.getSelectedText() || ''; } catch (_) {} }
-    try { return String(window.getSelection() || ''); } catch (_) { return ''; }
+    if (editor) {
+      try {
+        const sel = editor.getSelectedText();
+        if (sel) return sel;
+      } catch (_) {}
+    }
+    // Fallback: DOM selection
+    try {
+      const domSel = window.getSelection();
+      if (domSel && domSel.toString()) return domSel.toString();
+    } catch (_) {}
+    return '';
+  }
+
+  // ─── CORE FIX: proactive clipboard write ──────────────────────────────────
+  // When Ace or VPL blocks the copy event before it reaches window,
+  // we intercept at keydown (capture phase, highest priority) and write
+  // directly to the clipboard via the async Clipboard API — bypassing
+  // the blocked copy event entirely.
+  function forceCopyToClipboard(selected) {
+    if (!selected) return false;
+    // Primary: async Clipboard API (works in MV3 content scripts with clipboardWrite permission)
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+      navigator.clipboard.writeText(selected).then(function () {
+        setIndicatorCopied(selected.length);
+      }).catch(function () {
+        // Fallback: execCommand via a temporary textarea
+        copyViaExecCommand(selected);
+      });
+      return true;
+    }
+    // Fallback for older browsers
+    return copyViaExecCommand(selected);
+  }
+
+  function copyViaExecCommand(text) {
+    try {
+      const el = document.createElement('textarea');
+      el.value = text;
+      el.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+      document.body.appendChild(el);
+      el.select();
+      const ok = document.execCommand('copy');
+      document.body.removeChild(el);
+      if (ok) setIndicatorCopied(text.length);
+      return ok;
+    } catch (_) { return false; }
   }
 
   function setClipboardText(text, event) {
@@ -630,7 +701,6 @@
 
   async function autoType(text, speedMs) {
     if (!text) return false;
-    // If already typing, cancel the previous session and wait a tick before starting new one
     if (isTyping) {
       cancelTyping = true;
       await delay(100);
@@ -652,7 +722,6 @@
       charsTyped = index + 1;
       setIndicatorTyping(charsTyped, totalChars);
 
-      // FIX: Read speed from current settings each iteration so popup changes take effect immediately
       let delayMs = Math.max(1, Number(speedMs) || Number(settings.typingSpeed) || 75);
       if (settings.randomizeSpeed) {
         const variation = delayMs * 0.2;
@@ -673,8 +742,6 @@
   }
 
   async function startAutoTyper(textFromMessage, speedOverride) {
-    // Use text passed directly from popup — do NOT re-read clipboard here.
-    // navigator.clipboard.readText() fails in content scripts without user gesture on the page.
     const text = textFromMessage || '';
     if (!text) return false;
     const speed = Math.max(1, Number(speedOverride) || Number(settings.typingSpeed) || 75);
@@ -706,6 +773,7 @@
     const selected = getSelectedText();
     if (!selected) return;
     setClipboardText(selected, event);
+    setIndicatorCopied(selected.length);
   }, true);
 
   window.addEventListener('cut', function (event) {
@@ -721,11 +789,65 @@
   window.addEventListener('contextmenu', function (event) { if (!settings.enabled) return; neutralizeEvent(event, false); }, true);
   window.addEventListener('selectstart', function (event) { if (!settings.enabled) return; neutralizeEvent(event, false); }, true);
 
+  // ─── Shortcut copy: detect copy shortcut in keydown, bypass blocked copy event ─
+  function isCopyShortcut(event) {
+    const key = String(event.key || '').toLowerCase();
+    if (key !== 'c') return false;
+    // Respect custom shortcut if configured
+    const copyShortcut = settings.shortcuts && settings.shortcuts.copy
+      ? settings.shortcuts.copy[IS_MAC ? 'mac' : 'win']
+      : null;
+    if (copyShortcut) return matchShortcut(event, copyShortcut);
+    // Default: Ctrl+C (Win/Linux) or Cmd+C (Mac)
+    if (IS_MAC) return !!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+    return !!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+  }
+
+  function isCutShortcut(event) {
+    const key = String(event.key || '').toLowerCase();
+    if (key !== 'x') return false;
+    if (IS_MAC) return !!event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey;
+    return !!event.ctrlKey && !event.metaKey && !event.shiftKey && !event.altKey;
+  }
+
   window.addEventListener('keydown', function (event) {
     if (!settings.enabled) return;
+
+    // Escape cancels typing
     if (event.key === 'Escape' && isTyping) { cancelTyping = true; neutralizeEvent(event, false); return; }
+
+    // Auto-typer shortcut
     if (matchShortcut(event, settings.autoTyperShortcut)) { neutralizeEvent(event, true); startAutoTyper(); return; }
+
+    // ── COPY SHORTCUT INTERCEPT (the core fix) ──────────────────────────────
+    // Ace editor may block the copy event before it reaches our window listener.
+    // Here at keydown (capture, runs first), we grab the selected text from Ace
+    // and write it directly to the clipboard — no copy event needed.
+    if (isCopyShortcut(event)) {
+      const selected = getSelectedText();
+      if (selected) {
+        // Don't preventDefault — let Ace also handle it; our write wins via async API
+        forceCopyToClipboard(selected);
+        // Neutralize propagation so VPL wrapper can't block it after us
+        try { event.stopImmediatePropagation(); } catch (_) {}
+        return;
+      }
+    }
+
+    // ── CUT SHORTCUT INTERCEPT ──────────────────────────────────────────────
+    if (isCutShortcut(event)) {
+      const selected = getSelectedText();
+      if (selected) {
+        forceCopyToClipboard(selected);
+        // Let the editor handle the actual deletion natively
+        return;
+      }
+    }
+
+    // Custom paste shortcut passthrough
     if (settings.customShortcut && matchShortcut(event, settings.customShortcut)) { neutralizeEvent(event, false); return; }
+
+    // Generic modifier key passthrough for v/c/x/a
     const hasModifier = event.ctrlKey || event.metaKey || event.altKey;
     if (!hasModifier) return;
     const key = String(event.key || '').toLowerCase();
@@ -750,7 +872,6 @@
           return true;
         }
 
-        // FIX: New action to update speed in real-time without page reload
         if (message.action === 'setSpeed') {
           const newSpeed = Math.max(1, Number(message.speed) || 75);
           settings.typingSpeed = newSpeed;
@@ -772,6 +893,22 @@
             totalChars: totalChars,
             typingSpeed: settings.typingSpeed
           });
+          return true;
+        }
+
+        // NEW: message from popup "copy editor content"
+        if (message.action === 'copyEditorContent') {
+          const editor = findAceEditorInstance();
+          let text = '';
+          if (editor) {
+            try { text = editor.getValue() || ''; } catch (_) {}
+          }
+          if (text) {
+            forceCopyToClipboard(text);
+            sendResponse({ ok: true, length: text.length });
+          } else {
+            sendResponse({ ok: false });
+          }
           return true;
         }
       });
